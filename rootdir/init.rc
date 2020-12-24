@@ -30,7 +30,7 @@ on early-init
 
 on init
     sysclktz 0
-
+    
     # Mix device-specific information into the entropy pool
     copy /proc/cmdline /dev/urandom
     copy /default.prop /dev/urandom
@@ -637,6 +637,14 @@ on property:security.perf_harden=0
 
 on property:security.perf_harden=1
     write /proc/sys/kernel/perf_event_paranoid 3
+
+on property:net.fydeos.interface=*
+    exec - root root -- /system/bin/sh -c "echo '1002 ${net.fydeos.interface}' >> /data/misc/net/rt_tables"
+    exec - root root -- /system/bin/ip rule add from all fwmark 0x0/0xffff iif lo table ${net.fydeos.interface}
+
+    exec - root root -- /system/bin/ip route add 100.115.92.0/30 dev ${net.fydeos.interface} table ${net.fydeos.interface}
+    exec - root root -- /system/bin/ip route add default via 100.115.92.1 dev ${net.fydeos.interface} table ${net.fydeos.interface}
+    exec - root root -- /system/bin/ndc resolver setnetdns ${net.fydeos.interface} 114.114.114.114 8.8.8.8
 
 ## Daemon processes to be run by init.
 ##
